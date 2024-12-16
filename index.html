@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>건하 공부 진행률</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #e0e0e0; /* 회색 배경 */
+        }
+        #progress-bar {
+            width: 80%;
+            margin: 20px auto;
+            height: 30px;
+            border: 1px solid #000;
+            background-color: #f4f4f4;
+            position: relative;
+        }
+        #progress {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0%;
+        }
+        #progress-text {
+            margin-top: 10px;
+            font-size: 20px;
+        }
+        #checkbox-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 60px); /* 체크박스 크기와 간격 */
+            gap: 5px; /* 간격을 작게 */
+            justify-content: center;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .checkbox-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+        }
+        input[type="checkbox"] {
+            width: 50px; /* 체크박스 크기 */
+            height: 50px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>건하 공부 진행률</h1>
+    <div id="progress-bar">
+        <div id="progress"></div>
+    </div>
+    <div id="progress-text">0%</div>
+    <div id="checkbox-container"></div>
+
+    <script>
+        const totalCheckboxes = 690;
+        const firstGroup = 330;
+        const secondGroup = 359;
+        const checkboxContainer = document.getElementById('checkbox-container');
+        const progressBar = document.getElementById('progress');
+        const progressText = document.getElementById('progress-text');
+
+        // 체크박스 생성
+        for (let i = 0; i < totalCheckboxes; i++) {
+            const label = document.createElement('label');
+            label.className = 'checkbox-label';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.addEventListener('change', updateProgress);
+
+            const number = document.createElement('span');
+            number.textContent = i < firstGroup ? i + 1 : i - firstGroup + 1;
+
+            label.appendChild(checkbox);
+            label.appendChild(number);
+            checkboxContainer.appendChild(label);
+        }
+
+        // 진행률 업데이트
+        function updateProgress() {
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const progress = Math.round((checked / totalCheckboxes) * 100);
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+
+            // 서버에 데이터 업데이트
+            fetch('http://localhost:3000/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ checkedCount: checked }),
+            });
+        }
+
+        // 서버에서 초기 데이터 가져오기
+        async function loadProgress() {
+            const response = await fetch('http://localhost:3000/progress');
+            const data = await response.json();
+
+            // 초기 진행률 설정
+            const { checkedCount, total } = data;
+            const progress = Math.round((checkedCount / total) * 100);
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+
+            // 체크박스 상태 동기화
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            for (let i = 0; i < checkedCount; i++) {
+                checkboxes[i].checked = true;
+            }
+        }
+
+        loadProgress();
+    </script>
+</body>
+</html>
+
