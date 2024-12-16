@@ -85,36 +85,43 @@
 
         // 진행률 업데이트
         function updateProgress() {
-            const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
-            const progress = Math.round((checked / totalCheckboxes) * 100);
-            progressBar.style.width = `${progress}%`;
-            progressText.textContent = `${progress}%`;
+    const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+    const progress = Math.round((checked / totalCheckboxes) * 100);
+    progressBar.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
 
-            // 서버에 데이터 업데이트
-            fetch('https://my-progress-api.onrender.com/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ checkedCount: checked }),
-            });
-        }
+    // 서버에 데이터 업데이트
+    fetch('https://my-progress-api.onrender.com/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkedCount: checked }),
+    }).catch((error) => console.error('Error updating progress:', error));
+}
+
 
         // 서버에서 초기 데이터 가져오기
         async function loadProgress() {
-            const response = await fetch('https://my-progress-api.onrender.com/update');
-            const data = await response.json();
+    try {
+        const response = await fetch('https://my-progress-api.onrender.com/progress');
+        const data = await response.json();
 
-            // 초기 진행률 설정
-            const { checkedCount, total } = data;
-            const progress = Math.round((checkedCount / total) * 100);
-            progressBar.style.width = `${progress}%`;
-            progressText.textContent = `${progress}%`;
+        // 초기 진행률 설정
+        const { checkedCount, total } = data;
+        const progress = Math.round((checkedCount / total) * 100);
+        progressBar.style.width = `${progress}%`;
+        progressText.textContent = `${progress}%`;
 
-            // 체크박스 상태 동기화
-            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            for (let i = 0; i < checkedCount; i++) {
-                checkboxes[i].checked = true;
-            }
+        // 체크박스 상태 복원
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        for (let i = 0; i < checkedCount; i++) {
+            checkboxes[i].checked = true;
         }
+    } catch (error) {
+        console.error('Error loading progress:', error);
+    }
+}
+
+        
 
         loadProgress();
     </script>
